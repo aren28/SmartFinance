@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint && tsc --noEmit",
+    "test": "jest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -26,15 +27,18 @@
     "@storybook/react-webpack5": "^8.6.18",
     "@storybook/test": "^8.6.18",
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "eslint-plugin-storybook": "^10.3.5",
+    "jest": "^30.3.0",
     "prisma": "^5.22.0",
     "storybook": "^8.6.18",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.9",
     "typescript": "^5"
   },
   "eslintConfig": {
