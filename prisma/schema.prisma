@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prismaスキーマファイル
+// 詳細: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -9,11 +9,12 @@ datasource db {
   provider = "postgresql"
 }
 
+/// 支出カテゴリ
 model Category {
   id        Int       @id @default(autoincrement())
-  name      String    @unique
-  color     String    @default("#6366f1")
-  icon      String    @default("💰")
+  name      String    @unique                      // カテゴリ名（一意）
+  color     String    @default("#6366f1")          // 表示色（HEXカラーコード）
+  icon      String    @default("💰")              // アイコン（絵文字）
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt      @map("updated_at")
   expenses  Expense[]
@@ -21,13 +22,14 @@ model Category {
   @@map("categories")
 }
 
+/// 支出記録
 model Expense {
   id          Int      @id @default(autoincrement())
-  amount      Int                        // 円単位固定（小数点なし）
-  description String
-  rawText     String   @map("raw_text") // AI解析失敗時の再解析用に保持
-  date        DateTime @default(now())
-  categoryId  Int      @map("category_id")
+  amount      Int                        @map("amount")       // 金額（円単位・小数点なし）
+  description String                                          // AI解析後の支出説明
+  rawText     String   @map("raw_text")                      // ユーザー入力の生テキスト（再解析用）
+  date        DateTime @default(now())                        // 支出日
+  categoryId  Int      @map("category_id")                   // カテゴリID（外部キー）
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt      @map("updated_at")
