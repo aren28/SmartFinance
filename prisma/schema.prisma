@@ -14,22 +14,25 @@ model Category {
   name      String    @unique
   color     String    @default("#6366f1")
   icon      String    @default("💰")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt      @map("updated_at")
   expenses  Expense[]
+
+  @@map("categories")
 }
 
 model Expense {
   id          Int      @id @default(autoincrement())
-  amount      Int      // 円単位固定（小数点なし）
+  amount      Int                        // 円単位固定（小数点なし）
   description String
-  rawText     String   // AI解析失敗時の再解析用に保持
+  rawText     String   @map("raw_text") // AI解析失敗時の再解析用に保持
   date        DateTime @default(now())
-  categoryId  Int
+  categoryId  Int      @map("category_id")
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
 
   @@index([date])
   @@index([categoryId])
+  @@map("expenses")
 }
