@@ -1,157 +1,43 @@
 # API設計
 
-## ベースURL
+## エンドポイント一覧
 
-`/api`
+### POST /api/expenses
 
----
+- リクエスト: `{ rawText: string, categoryId?: string }`
+- レスポンス: `Expense`
+- AI自動カテゴリ判定: categoryId未指定時
 
-## 支出 (Expenses)
+### GET /api/expenses
 
-### GET `/api/expenses`
+- クエリ: `month(YYYY-MM)`, `limit(default:20)`, `offset(default:0)`
+- レスポンス: `{ expenses: Expense[], total: number }`
 
-今月の支出一覧を取得する。
+### DELETE /api/expenses/:id
 
-**クエリパラメータ**
+- レスポンス: `{ success: true }`
 
-| パラメータ | 型 | 必須 | 説明 |
-|-----------|---|------|------|
-| year | string | No | 年（省略時は全件） |
-| month | string | No | 月（1-12） |
+### GET /api/categories
 
-**レスポンス 200**
+- レスポンス: `{ categories: Category[] }`
 
-```json
-[
-  {
-    "id": 1,
-    "amount": 500,
-    "description": "スタバ",
-    "rawText": "スタバで500円",
-    "date": "2026-04-15T00:00:00.000Z",
-    "categoryId": 1,
-    "category": { "id": 1, "name": "食費", "color": "#6366f1", "icon": "💰" },
-    "createdAt": "...",
-    "updatedAt": "..."
-  }
-]
-```
+### POST /api/categories
 
----
+- リクエスト: `{ name: string, color: string }`
+- レスポンス: `Category`
 
-### POST `/api/expenses`
+### PUT /api/categories/:id
 
-自然言語テキストをAI解析して支出を登録する。
+- リクエスト: `{ name?: string, color?: string }`
+- レスポンス: `Category`
 
-**リクエストボディ**
+### DELETE /api/categories/:id
 
-```json
-{ "rawText": "スタバで500円" }
-```
+- レスポンス: `{ success: true }`
+- 制約: 支出が紐づく場合は400エラー
 
-**レスポンス 201**
+### GET /api/advice
 
-登録された Expense オブジェクト（category 含む）
-
-**エラー**
-
-| ステータス | 理由 |
-|-----------|------|
-| 400 | rawText が空または未指定 |
-| 500 | AI解析失敗 / DB エラー |
-
----
-
-## カテゴリ (Categories)
-
-### GET `/api/categories`
-
-カテゴリ一覧（支出件数付き）を取得する。
-
-**レスポンス 200**
-
-```json
-[
-  {
-    "id": 1,
-    "name": "食費",
-    "color": "#6366f1",
-    "icon": "💰",
-    "_count": { "expenses": 5 }
-  }
-]
-```
-
----
-
-### POST `/api/categories`
-
-カテゴリを作成する。
-
-**リクエストボディ**
-
-```json
-{ "name": "趣味", "color": "#10b981", "icon": "🎮" }
-```
-
-**エラー**
-
-| ステータス | 理由 |
-|-----------|------|
-| 400 | name が空 |
-| 409 | 同名カテゴリが既に存在 |
-
----
-
-### PATCH `/api/categories?id=<id>`
-
-カテゴリを更新する。
-
-**クエリパラメータ**: `id` (必須)
-
-**リクエストボディ**（部分更新可）
-
-```json
-{ "name": "新名前", "color": "#f59e0b", "icon": "🍔" }
-```
-
----
-
-### DELETE `/api/categories?id=<id>`
-
-カテゴリを削除する。支出が紐づく場合は 409 を返す（Restrict）。
-
-**レスポンス 204** No Content
-
-**エラー**
-
-| ステータス | 理由 |
-|-----------|------|
-| 400 | id が未指定 |
-| 409 | 支出が紐づいているため削除不可 |
-| 404 | カテゴリが存在しない |
-
----
-
-## アドバイス (Advice)
-
-### GET `/api/advice`
-
-指定月の支出を分析してAIアドバイスを返す。
-
-**クエリパラメータ**
-
-| パラメータ | 型 | 必須 | デフォルト |
-|-----------|---|------|---------|
-| year | string | No | 現在の年 |
-| month | string | No | 現在の月 |
-
-**レスポンス 200**
-
-```json
-{
-  "advice": "今月は食費が多めです。自炊を増やすと節約できます。",
-  "totalAmount": 32000,
-  "topCategory": "食費"
-}
-```
+- クエリ: `month(YYYY-MM)`
+- レスポンス: `{ advice: string, generatedAt: Date }`
+- キャッシュ: 同月は1時間キャッシュ
