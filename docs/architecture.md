@@ -8,9 +8,9 @@ AI家計簿アプリ。自然言語テキストをClaudeで解析し、支出を
 
 | レイヤー | 技術 |
 |---------|------|
-| フロントエンド | Next.js 16 (App Router) + TypeScript |
+| フロントエンド | Next.js 16.2.3 (App Router) + TypeScript |
 | スタイリング | Tailwind CSS |
-| データベース | SQLite (Prisma ORM) |
+| データベース | PostgreSQL (Prisma ORM) |
 | AI | Claude Haiku (Anthropic SDK) |
 | ランタイム | Node.js 18 |
 
