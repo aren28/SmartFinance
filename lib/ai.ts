@@ -1,20 +1,29 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { ParsedExpense } from "@/types";
 
-const client = new Anthropic();
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 /**
  * 自然言語テキストから支出情報を解析する
  * 例: "スタバで500円" → { amount: 500, description: "スタバ", categoryName: "食費", date: "..." }
  */
 export async function parseExpenseText(
-  rawText: string
+  rawText: string,
+  categoryNames: string[] = []
 ): Promise<ParsedExpense> {
   const today = new Date().toISOString().split("T")[0];
+  const categoryList =
+    categoryNames.length > 0
+      ? categoryNames.join("/")
+      : "食費/交通費/娯楽費/日用品/医療費/その他";
 
   const message = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 512,
+    max_tokens: 1000,
+    system:
+      "あなたは家計簿アシスタントです。ユーザーの支出テキストを解析し、JSONのみを返してください。説明文やコードブロックは不要です。",
     messages: [
       {
         role: "user",
@@ -27,7 +36,7 @@ export async function parseExpenseText(
 {
   "amount": <金額（整数、円単位）>,
   "description": <支出の説明>,
-  "categoryName": <カテゴリ名（食費/交通費/娯楽費/日用品/医療費/その他 のいずれか）>,
+  "categoryName": <カテゴリ名（${categoryList} のいずれか）>,
   "date": <日付 YYYY-MM-DD形式>
 }`,
       },
@@ -43,7 +52,12 @@ export async function parseExpenseText(
     throw new Error("AI response did not contain valid JSON");
   }
 
-  const parsed = JSON.parse(jsonMatch[0]) as ParsedExpense;
+  let parsed: ParsedExpense;
+  try {
+    parsed = JSON.parse(jsonMatch[0]) as ParsedExpense;
+  } catch {
+    throw new Error(`Failed to parse AI response as JSON: ${jsonMatch[0]}`);
+  }
 
   if (
     typeof parsed.amount !== "number" ||
