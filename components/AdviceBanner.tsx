@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useAdvice } from "@/hooks/useAdvice";
 
 export default function AdviceBanner() {
-  const { advice, loading, error, fetchAdvice } = useAdvice();
+  const { advice, loading, fetchAdvice } = useAdvice();
 
   useEffect(() => {
     fetchAdvice();
@@ -12,16 +12,9 @@ export default function AdviceBanner() {
 
   if (loading) {
     return (
-      <div className="rounded-lg bg-indigo-50 p-4 animate-pulse">
-        <div className="h-4 bg-indigo-200 rounded w-3/4" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-600">
-        {error}
+      <div className="rounded-lg p-4 animate-pulse" style={{ backgroundColor: "#E1F5EE" }}>
+        <div className="h-3 rounded w-16 mb-2" style={{ backgroundColor: "#A7DFC8" }} />
+        <div className="h-4 rounded w-3/4" style={{ backgroundColor: "#A7DFC8" }} />
       </div>
     );
   }
@@ -29,12 +22,15 @@ export default function AdviceBanner() {
   if (!advice) return null;
 
   return (
-    <div className="rounded-lg bg-indigo-50 border border-indigo-200 p-4 space-y-1">
-      <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide">
-        今月のアドバイス
-      </p>
-      <p className="text-sm text-indigo-900">{advice.advice}</p>
-      <div className="flex gap-4 pt-1 text-xs text-indigo-600">
+    <div className="rounded-lg p-4 space-y-1" style={{ backgroundColor: "#E1F5EE" }}>
+      <span
+        className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full"
+        style={{ backgroundColor: "#34C48B", color: "#fff" }}
+      >
+        AIアドバイス
+      </span>
+      <p className="text-sm text-gray-800">{advice.advice}</p>
+      <div className="flex gap-4 pt-1 text-xs text-gray-500">
         <span>合計: {advice.totalAmount.toLocaleString()}円</span>
         <span>最多カテゴリ: {advice.topCategory}</span>
       </div>

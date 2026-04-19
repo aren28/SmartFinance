@@ -30,6 +30,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const duplicate = await prisma.category.findUnique({
+      where: { name: name.trim() },
+    });
+    if (duplicate) {
+      return NextResponse.json(
+        { error: "同じ名前のカテゴリが既に存在します" },
+        { status: 409 }
+      );
+    }
+
     const category = await prisma.category.create({
       data: {
         name: name.trim(),
