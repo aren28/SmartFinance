@@ -87,7 +87,7 @@ describe("parseExpenseText()", () => {
       "日用品",
     ]);
     expect(result.amount).toBe(450);
-    expect(result.description).toBe("コンビニ");
+    expect(result.description).toBe("昨日コンビニ");
   });
 });
 

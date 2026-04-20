@@ -76,7 +76,7 @@ export async function DELETE(
     if (existing._count.expenses > 0) {
       return NextResponse.json(
         { error: "このカテゴリには支出が紐づいているため削除できません" },
-        { status: 400 }
+        { status: 409 }
       );
     }
 

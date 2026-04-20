@@ -21,28 +21,33 @@ export default function Home() {
 
   useEffect(() => {
     const loadData = async () => {
-      const now = new Date();
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      try {
+        const now = new Date();
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-      const [expRes, catRes, lastRes] = await Promise.all([
-        fetch(`/api/expenses?month=${monthParam(now)}`),
-        fetch("/api/categories"),
-        fetch(`/api/expenses?month=${monthParam(lastMonth)}`),
-      ]);
+        const [expRes, catRes, lastRes] = await Promise.all([
+          fetch(`/api/expenses?month=${monthParam(now)}`),
+          fetch("/api/categories"),
+          fetch(`/api/expenses?month=${monthParam(lastMonth)}`),
+        ]);
 
-      if (expRes.ok) {
-        const data = await expRes.json();
-        setExpenses(data.expenses ?? []);
-        setTotalThisMonth(data.total ?? 0);
+        if (expRes.ok) {
+          const data = await expRes.json();
+          setExpenses(data.expenses ?? []);
+          setTotalThisMonth(data.total ?? 0);
+        }
+        if (catRes.ok) {
+          setCategories(await catRes.json());
+        }
+        if (lastRes.ok) {
+          const data = await lastRes.json();
+          setTotalLastMonth(data.total ?? 0);
+        }
+      } catch {
+        // ネットワークエラー時もローディングを解除
+      } finally {
+        setLoading(false);
       }
-      if (catRes.ok) {
-        setCategories(await catRes.json());
-      }
-      if (lastRes.ok) {
-        const data = await lastRes.json();
-        setTotalLastMonth(data.total ?? 0);
-      }
-      setLoading(false);
     };
     loadData();
   }, []);
@@ -57,7 +62,9 @@ export default function Home() {
 
     if (!res.ok) {
       const data = await res.json();
-      throw new Error(data.error ?? "支出の登録に失敗しました");
+      const message = data.error ?? "支出の登録に失敗しました";
+      setSubmitError(message);
+      throw new Error(message);
     }
 
     const data = await res.json();
