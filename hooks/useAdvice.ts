@@ -1,44 +1,40 @@
-import { useState, useCallback } from "react";
-import { AdviceResponse } from "@/types";
+import { useState, useEffect, useCallback } from "react";
 
 type UseAdviceReturn = {
-  advice: AdviceResponse | null;
+  advice: string | null;
   loading: boolean;
   error: string | null;
-  fetchAdvice: (year?: number, month?: number) => Promise<void>;
+  refresh: () => void;
 };
 
-export function useAdvice(): UseAdviceReturn {
-  const [advice, setAdvice] = useState<AdviceResponse | null>(null);
+export function useAdvice(month?: string): UseAdviceReturn {
+  const [advice, setAdvice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAdvice = useCallback(
-    async (
-      year = new Date().getFullYear(),
-      month = new Date().getMonth() + 1
-    ) => {
-      setLoading(true);
-      setError(null);
+  const fetchAdvice = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const res = await fetch(
-          `/api/advice?year=${year}&month=${month}`
-        );
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error ?? "アドバイスの取得に失敗しました");
-        }
-        const data = (await res.json()) as AdviceResponse;
-        setAdvice(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "予期しないエラー");
-      } finally {
-        setLoading(false);
+    try {
+      const query = month ? `?month=${month}` : "";
+      const res = await fetch(`/api/advice${query}`);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "アドバイスの取得に失敗しました");
       }
-    },
-    []
-  );
+      const data = await res.json();
+      setAdvice(data.advice as string);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "予期しないエラー");
+    } finally {
+      setLoading(false);
+    }
+  }, [month]);
 
-  return { advice, loading, error, fetchAdvice };
+  useEffect(() => {
+    fetchAdvice();
+  }, [fetchAdvice]);
+
+  return { advice, loading, error, refresh: fetchAdvice };
 }

@@ -1,4 +1,4 @@
-import { ParsedExpense } from "@/types";
+import { Expense, ParsedExpense } from "@/types";
 
 // ── 本番AIコード（全作業完了後に有効化）─────────────────────────────
 // import Anthropic from "@anthropic-ai/sdk";
@@ -28,17 +28,18 @@ import { ParsedExpense } from "@/types";
 //   return JSON.parse(jsonMatch[0]) as ParsedExpense;
 // }
 //
+// TODO: 本番実装時は以下のモック版をこのHaiku 4.5呼び出し版に切り替える
 // export async function generateAdvice(
-//   expenses: { amount: number; description: string; categoryName: string }[],
-//   period: string = "今月"
+//   expenses: Expense[],
+//   month: string
 // ): Promise<string> {
-//   if (expenses.length === 0) return "まだ支出データがありません。";
+//   if (expenses.length === 0) return "今月はまだ支出の記録がありません。支出を記録してみましょう。";
 //   const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-//   const summary = expenses.map((e) => `${e.categoryName}: ${e.amount}円`).join("\n");
+//   const summary = expenses.map((e) => `${e.category.name}: ${e.amount}円`).join("\n");
 //   const message = await client.messages.create({
 //     model: "claude-haiku-4-5-20251001",
 //     max_tokens: 512,
-//     messages: [{ role: "user", content: `${period}の支出: 合計${total}円\n${summary}\n100〜150文字でアドバイスをください。` }],
+//     messages: [{ role: "user", content: `${month}の支出: 合計${total}円\n${summary}\n100〜150文字でアドバイスをください。` }],
 //   });
 //   return message.content[0].type === "text" ? message.content[0].text : "アドバイスを生成できませんでした。";
 // }
@@ -66,13 +67,14 @@ export async function parseExpenseText(
   };
 }
 
+// TODO: 本番実装時はHaiku 4.5（claude-haiku-4-5-20251001）を使ったAPI呼び出しに切り替える
 export async function generateAdvice(
-  expenses: { amount: number; description: string; categoryName: string }[],
-  _period: string = "今月"
+  expenses: Expense[],
+  _month: string
 ): Promise<string> {
   if (expenses.length === 0) {
-    return "まだ支出データがありません。支出を記録してアドバイスを受け取りましょう！";
+    return "今月はまだ支出の記録がありません。支出を記録してみましょう。";
   }
   const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-  return `今月の支出合計は${total.toLocaleString()}円です。引き続き記録を続けて、支出の傾向を把握しましょう。（※これはモックアドバイスです）`;
+  return `今月は合計${total}円の支出がありました。引き続き記録を続けましょう。`;
 }

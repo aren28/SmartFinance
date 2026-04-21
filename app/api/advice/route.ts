@@ -3,24 +3,28 @@ import { prisma } from "@/lib/db";
 import { generateAdvice } from "@/lib/ai";
 import { handleApiError } from "@/lib/errorHandler";
 
-// GET /api/advice?year=YYYY&month=M - 支出分析アドバイスを返す
+export const revalidate = 3600;
+
+// GET /api/advice?month=YYYY-MM - 支出分析アドバイスを返す
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const year = searchParams.get("year") ?? new Date().getFullYear().toString();
-    const month = searchParams.get("month") ?? (new Date().getMonth() + 1).toString();
+    const now = new Date();
+    const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const month = searchParams.get("month") ?? defaultMonth;
 
-    const y = parseInt(year);
-    const m = parseInt(month);
+    const parts = month.split("-");
+    const y = parseInt(parts[0]);
+    const m = parseInt(parts[1]);
 
-    if (isNaN(y) || isNaN(m) || m < 1 || m > 12) {
+    if (parts.length !== 2 || isNaN(y) || isNaN(m) || m < 1 || m > 12) {
       return NextResponse.json(
-        { error: "year・month のフォーマットが不正です" },
+        { error: "month は YYYY-MM 形式で指定してください" },
         { status: 400 }
       );
     }
 
-    const expenses = await prisma.expense.findMany({
+    const rows = await prisma.expense.findMany({
       where: {
         date: {
           gte: new Date(y, m - 1, 1),
@@ -31,27 +35,25 @@ export async function GET(request: NextRequest) {
       orderBy: { date: "desc" },
     });
 
-    const totalAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
-
-    // カテゴリ別集計
-    const byCategoryMap = new Map<string, number>();
-    for (const e of expenses) {
-      const prev = byCategoryMap.get(e.category.name) ?? 0;
-      byCategoryMap.set(e.category.name, prev + e.amount);
-    }
-    const topCategory =
-      [...byCategoryMap.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "なし";
-
-    const period = `${y}年${m}月`;
-    const adviceInput = expenses.map((e) => ({
-      amount: e.amount,
-      description: e.description,
-      categoryName: e.category.name,
+    const expenses = rows.map((e) => ({
+      ...e,
+      date: e.date.toISOString().split("T")[0],
+      createdAt: e.createdAt.toISOString(),
+      updatedAt: e.updatedAt.toISOString(),
+      category: {
+        ...e.category,
+        createdAt: e.category.createdAt.toISOString(),
+        updatedAt: e.category.updatedAt.toISOString(),
+      },
     }));
 
-    const advice = await generateAdvice(adviceInput, period);
+    const advice = await generateAdvice(expenses, month);
 
-    return NextResponse.json({ advice, totalAmount, topCategory });
+    return NextResponse.json({
+      advice,
+      generatedAt: new Date().toISOString(),
+      month,
+    });
   } catch (error) {
     return handleApiError(error);
   }
