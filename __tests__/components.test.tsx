@@ -13,7 +13,7 @@ jest.mock("@/hooks/useAdvice", () => ({
     advice: null,
     loading: true,
     error: null,
-    fetchAdvice: jest.fn(),
+    refresh: jest.fn(),
   }),
 }));
 
